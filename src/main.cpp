@@ -12,7 +12,7 @@ int main(int argc, char* argv[]) {
     GaussianPointCloudLoader loader;
     auto pointCloud = loader.loadFromFile(argv[1]);
     
-    if (pointCloud.empty()) {
+    if (!pointCloud || pointCloud->empty()) {
         std::cerr << "Failed to load point cloud from file: " << argv[1] << std::endl;
         return -1;
     }

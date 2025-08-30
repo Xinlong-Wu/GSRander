@@ -7,6 +7,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Find required packages
 find_package(PCL REQUIRED)
 find_package(Eigen3 REQUIRED)
+find_package(glfw3 REQUIRED)
 
 # Find Vulkan
 find_package(Vulkan REQUIRED)
@@ -48,6 +49,7 @@ target_link_libraries(gsrander
     ${PCL_LIBRARIES}
     Eigen3::Eigen
     Vulkan::Vulkan
+    glfw
 )
 
 target_include_directories(gsrander PRIVATE
