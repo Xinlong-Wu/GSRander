@@ -1,0 +1,9 @@
+{
+  "dependencies": [
+    "pcl",
+    "eigen3",
+    "glfw3",
+    "vulkan",
+    "glslang"
+  ]
+}
