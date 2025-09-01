@@ -4,55 +4,68 @@ project(GSRander)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# Function to find library with environment variable fallback
+function(find_library_with_env_fallback PACKAGE_NAME HEADER_ONLY)
+    # Try to find package with find_package first
+    find_package(${PACKAGE_NAME} QUIET)
+
+    # If find_package failed, try to use ${PACKAGE_NAME}_DIR environment variable
+    if(NOT ${PACKAGE_NAME}_FOUND)
+        if(DEFINED ENV{${PACKAGE_NAME}_DIR})
+            message(STATUS "Using ${PACKAGE_NAME} from ${PACKAGE_NAME}_DIR environment variable: $ENV{${PACKAGE_NAME}_DIR}")
+            set(${PACKAGE_NAME}_INCLUDE_DIRS $ENV{${PACKAGE_NAME}_DIR}/include PARENT_SCOPE)
+
+            # If it's a header-only library, we're done
+            if(HEADER_ONLY)
+                return()
+            endif()
+            
+            # Determine library path based on platform
+            set(_lib_path "")
+            if(WIN32)
+                if(EXISTS $ENV{${PACKAGE_NAME}_DIR}/lib/${PACKAGE_NAME}.lib)
+                    set(_lib_path $ENV{${PACKAGE_NAME}_DIR}/lib/${PACKAGE_NAME}.lib)
+                elseif(EXISTS $ENV{${PACKAGE_NAME}_DIR}/lib/${PACKAGE_NAME}dll.lib)
+                    set(_lib_path $ENV{${PACKAGE_NAME}_DIR}/lib/${PACKAGE_NAME}dll.lib)
+                endif()
+            elseif(APPLE)
+                if(EXISTS $ENV{${PACKAGE_NAME}_DIR}/lib/lib${PACKAGE_NAME}.dylib)
+                    set(_lib_path $ENV{${PACKAGE_NAME}_DIR}/lib/lib${PACKAGE_NAME}.dylib)
+                elseif(EXISTS $ENV{${PACKAGE_NAME}_DIR}/lib/lib${PACKAGE_NAME}.a)
+                    set(_lib_path $ENV{${PACKAGE_NAME}_DIR}/lib/lib${PACKAGE_NAME}.a)
+                endif()
+            else() # Linux
+                if(EXISTS $ENV{${PACKAGE_NAME}_DIR}/lib/lib${PACKAGE_NAME}.so)
+                    set(_lib_path $ENV{${PACKAGE_NAME}_DIR}/lib/lib${PACKAGE_NAME}.so)
+                elseif(EXISTS $ENV{${PACKAGE_NAME}_DIR}/lib/lib${PACKAGE_NAME}.a)
+                    set(_lib_path $ENV{${PACKAGE_NAME}_DIR}/lib/lib${PACKAGE_NAME}.a)
+                endif()
+            endif()
+            
+            # Set library variable both in current and parent scope
+            if(_lib_path)
+                set(${PACKAGE_NAME}_LIBRARY "${_lib_path}" PARENT_SCOPE)
+                message(STATUS "Found ${PACKAGE_NAME} library: ${_lib_path}")
+            else()
+                message(FATAL_ERROR "Could not find ${PACKAGE_NAME} library in $ENV{${PACKAGE_NAME}_DIR}/lib/")
+            endif()
+        else()
+            message(FATAL_ERROR "Could not find ${PACKAGE_NAME}. Please either install it system-wide or set the ${PACKAGE_NAME}_DIR environment variable to point to its location.")
+        endif()
+    endif()
+endfunction()
+
 # Find required packages
 find_package(PCL REQUIRED)
-find_package(Eigen3 REQUIRED)
 
-# Try to find glfw3 with find_package first
-find_package(glfw3 QUIET)
+# Find glm (header-only library)
+find_library_with_env_fallback(glm TRUE)
 
-# If find_package failed, try to use glfw3_DIR environment variable
-if(NOT glfw3_FOUND)
-    if(DEFINED ENV{glfw3_DIR})
-        message(STATUS "Using glfw3 from glfw3_DIR environment variable: $ENV{glfw3_DIR}")
-        # Add include directories
-        include_directories($ENV{glfw3_DIR}/include)
-        
-        # Determine library path based on platform
-        if(WIN32)
-            # For Windows, check for both Release and Debug libraries
-            if(EXISTS $ENV{glfw3_DIR}/lib/glfw3.lib)
-                set(GLFW3_LIBRARY $ENV{glfw3_DIR}/lib/glfw3.lib)
-            elseif(EXISTS $ENV{glfw3_DIR}/lib/glfw3dll.lib)
-                set(GLFW3_LIBRARY $ENV{glfw3_DIR}/lib/glfw3dll.lib)
-            endif()
-        elseif(APPLE)
-            # For macOS, look for .dylib or .a files
-            if(EXISTS $ENV{glfw3_DIR}/lib/libglfw3.dylib)
-                set(GLFW3_LIBRARY $ENV{glfw3_DIR}/lib/libglfw3.dylib)
-            elseif(EXISTS $ENV{glfw3_DIR}/lib/libglfw3.a)
-                set(GLFW3_LIBRARY $ENV{glfw3_DIR}/lib/libglfw3.a)
-            endif()
-        else()
-            # For Linux, look for .so or .a files
-            if(EXISTS $ENV{glfw3_DIR}/lib/libglfw3.so)
-                set(GLFW3_LIBRARY $ENV{glfw3_DIR}/lib/libglfw3.so)
-            elseif(EXISTS $ENV{glfw3_DIR}/lib/libglfw3.a)
-                set(GLFW3_LIBRARY $ENV{glfw3_DIR}/lib/libglfw3.a)
-            endif()
-        endif()
-        
-        # Check if we found the library
-        if(GLFW3_LIBRARY)
-            message(STATUS "Found glfw3 library: ${GLFW3_LIBRARY}")
-        else()
-            message(FATAL_ERROR "Could not find glfw3 library in $ENV{glfw3_DIR}/lib/")
-        endif()
-    else()
-        # If neither find_package nor glfw3_DIR environment variable worked, fatal error
-        message(FATAL_ERROR "Could not find glfw3. Please either install it system-wide or set the glfw3_DIR environment variable to point to its location.")
-    endif()
-endif()
+# Find glfw3
+find_library_with_env_fallback(glfw3 FALSE)
+
+# Find Eigen3
+# find_package(Eigen3 3.3 REQUIRED)
 
 # Find Vulkan
 find_package(Vulkan REQUIRED)
@@ -90,24 +103,24 @@ if(GLSL_COMPILER)
 endif()
 
 # Link libraries
-target_link_libraries(gsrander
+target_link_libraries(gsrander PRIVATE
     ${PCL_LIBRARIES}
-    Eigen3::Eigen
     Vulkan::Vulkan
+    # Eigen3::Eigen
 )
 
 # Link glfw3 library (either from find_package or from environment variable)
 if(glfw3_FOUND)
     # If found through find_package, use the imported target
-    target_link_libraries(gsrander glfw)
+    target_link_libraries(gsrander PRIVATE GLFW::GLFW)
 else()
     # If found through environment variable, use the library directly
-    target_link_libraries(gsrander ${GLFW3_LIBRARY})
+    target_link_libraries(gsrander PRIVATE ${glfw3_LIBRARY})
+    target_include_directories(gsrander PRIVATE ${glfw3_INCLUDE_DIRS})
 endif()
+
 target_include_directories(gsrander PRIVATE
     ${PCL_INCLUDE_DIRS}
-    ${EIGEN3_INCLUDE_DIR}
-    ${VULKAN_INCLUDE_DIRS}
 )
 
 target_compile_definitions(gsrander PRIVATE

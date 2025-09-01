@@ -5,7 +5,7 @@
 #include <GLFW/glfw3.h>
 
 #include <vector>
-#include <Eigen/Dense>
+#include <glm/glm.hpp>
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 
@@ -13,9 +13,9 @@ const uint32_t WIDTH = 800;
 const uint32_t HEIGHT = 600;
 
 struct UniformBufferObject {
-    Eigen::Matrix4f model;
-    Eigen::Matrix4f view;
-    Eigen::Matrix4f proj;
+    glm::mat4 model;
+    glm::mat4 view;
+    glm::mat4 proj;
 };
 
 class PointCloudRenderer {

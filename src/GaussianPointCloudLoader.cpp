@@ -3,11 +3,7 @@
 #include <sstream>
 #include <iostream>
 #include <vector>
-#include <Eigen/Dense>
-
-GaussianPointCloudLoader::GaussianPointCloudLoader() {}
-
-GaussianPointCloudLoader::~GaussianPointCloudLoader() {}
+#include <glm/glm.hpp>
 
 pcl::PointCloud<pcl::PointXYZRGB>::Ptr GaussianPointCloudLoader::loadFromFile(const std::string& filename) {
     auto pointCloud = pcl::PointCloud<pcl::PointXYZRGB>::Ptr(new pcl::PointCloud<pcl::PointXYZRGB>);
@@ -19,8 +15,8 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr GaussianPointCloudLoader::loadFromFile(co
     }
     
     std::string line;
-    std::vector<Eigen::Vector3f> positions;
-    std::vector<Eigen::Vector3f> colors;
+    std::vector<glm::vec3> positions;
+    std::vector<glm::vec3> colors;
     
     // Parse the file
     // This is a simple parser that assumes a specific format
@@ -42,14 +38,14 @@ pcl::PointCloud<pcl::PointXYZRGB>::Ptr GaussianPointCloudLoader::loadFromFile(co
     pointCloud->resize(positions.size());
     for (size_t i = 0; i < positions.size(); ++i) {
         pcl::PointXYZRGB point;
-        point.x = positions[i].x();
-        point.y = positions[i].y();
-        point.z = positions[i].z();
+        point.x = positions[i].x;
+        point.y = positions[i].y;
+        point.z = positions[i].z;
         
         // Assuming color values are in range [0, 1], convert to [0, 255]
-        point.r = static_cast<uint8_t>(colors[i].x() * 255);
-        point.g = static_cast<uint8_t>(colors[i].y() * 255);
-        point.b = static_cast<uint8_t>(colors[i].z() * 255);
+        point.r = static_cast<uint8_t>(colors[i].r * 255);
+        point.g = static_cast<uint8_t>(colors[i].g * 255);
+        point.b = static_cast<uint8_t>(colors[i].b * 255);
         
         pointCloud->at(i) = point;
     }

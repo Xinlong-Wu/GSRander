@@ -7,8 +7,8 @@
 
 class GaussianPointCloudLoader {
 public:
-    GaussianPointCloudLoader();
-    ~GaussianPointCloudLoader();
+    GaussianPointCloudLoader() = default;
+    ~GaussianPointCloudLoader() = default;
 
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr loadFromFile(const std::string& filename);
 
