@@ -40,5 +40,4 @@ std::vector<char> readShaderBinary(const std::string &filename);
 VkShaderModule createShaderModule(VkDevice device, const std::vector<char>& code);
 
 uint32_t findMemoryType(VkPhysicalDevice physicalDevice, uint32_t typeFilter, VkMemoryPropertyFlags properties);
-
 #endif // VK_UTILS_H

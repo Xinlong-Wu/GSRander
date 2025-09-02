@@ -70,8 +70,10 @@ private:
     void createSyncObjects();
 
     void createVertexBuffer();
+    void VulkanManager::createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
     
     // helper methods
+    void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
     std::vector<const char*> getRequiredExtensions();
     bool checkValidationLayerSupport();
 public:
