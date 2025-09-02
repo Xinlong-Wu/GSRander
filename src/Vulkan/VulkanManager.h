@@ -40,6 +40,9 @@ private:
     std::vector<VkSemaphore> imageAvailableSemaphores;
     std::vector<VkSemaphore> renderFinishedSemaphores;
     std::vector<VkFence> inFlightFences;
+
+    VkBuffer vertexBuffer;
+    VkDeviceMemory vertexBufferMemory;
     
     // Private methods
     void createInstance();
@@ -65,6 +68,8 @@ private:
     void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
     
     void createSyncObjects();
+
+    void createVertexBuffer();
     
     // helper methods
     std::vector<const char*> getRequiredExtensions();
