@@ -67,8 +67,7 @@ find_library_with_env_fallback(glfw3 FALSE)
 # Find Eigen3
 # find_package(Eigen3 3.3 REQUIRED)
 
-# Find Vulkan
-find_package(Vulkan REQUIRED)
+add_subdirectory(src/Vulkan)
 
 # Add executable
 add_executable(gsrander
@@ -81,22 +80,38 @@ add_executable(gsrander
 find_program(GLSL_COMPILER glslangValidator)
 
 if(GLSL_COMPILER)
-    add_custom_command(
-        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/point_cloud.vert.spv
-        COMMAND ${GLSL_COMPILER} --target-env vulkan1.0 -o ${CMAKE_CURRENT_BINARY_DIR}/point_cloud.vert.spv ${CMAKE_CURRENT_SOURCE_DIR}/shaders/point_cloud.vert
-        DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/shaders/point_cloud.vert
-        COMMENT "Compiling vertex shader"
-    )
-    
-    add_custom_command(
-        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/point_cloud.frag.spv
-        COMMAND ${GLSL_COMPILER} --target-env vulkan1.0 -o ${CMAKE_CURRENT_BINARY_DIR}/point_cloud.frag.spv ${CMAKE_CURRENT_SOURCE_DIR}/shaders/point_cloud.frag
-        DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/shaders/point_cloud.frag
-        COMMENT "Compiling fragment shader"
-    )
+    function(compile_shader SHADER_FILE)
+        get_filename_component(SHADER_NAME ${SHADER_FILE} NAME_WE)
+        get_filename_component(SHADER_EXT ${SHADER_FILE} LAST_EXT)
+        set(SHADER_TYPE "")
+        
+        if(SHADER_EXT STREQUAL ".vert")
+            set(SHADER_TYPE "vertex")
+        elseif(SHADER_EXT STREQUAL ".frag")
+            set(SHADER_TYPE "fragment")
+        else()
+            message(FATAL_ERROR "Unknown shader type for ${SHADER_FILE}")
+        endif()
+        
+        add_custom_command(
+            OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${SHADER_NAME}_${SHADER_EXT}.spv
+            COMMAND ${GLSL_COMPILER} --target-env vulkan1.0 -o ${CMAKE_CURRENT_BINARY_DIR}/${SHADER_NAME}${SHADER_EXT}.spv ${CMAKE_CURRENT_SOURCE_DIR}/shaders/${SHADER_FILE}
+            DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/shaders/${SHADER_FILE}
+            COMMENT "Compiling ${SHADER_TYPE} shader ${SHADER_FILE}"
+        )
+        
+        # Add to the list of shader outputs
+        list(APPEND SHADER_OUTPUTS ${CMAKE_CURRENT_BINARY_DIR}/${SHADER_NAME}_${SHADER_EXT}.spv)
+        set(SHADER_OUTPUTS ${SHADER_OUTPUTS} PARENT_SCOPE)
+    endfunction()
+
+    compile_shader(point_cloud.vert)
+    compile_shader(point_cloud.frag)
+    compile_shader(shader.vert)
+    compile_shader(shader.frag)
     
     add_custom_target(shaders ALL
-        DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/point_cloud.vert.spv ${CMAKE_CURRENT_BINARY_DIR}/point_cloud.frag.spv
+        DEPENDS ${SHADER_OUTPUTS}
     )
     
     add_dependencies(gsrander shaders)
@@ -104,8 +119,8 @@ endif()
 
 # Link libraries
 target_link_libraries(gsrander PRIVATE
+    render
     ${PCL_LIBRARIES}
-    Vulkan::Vulkan
     # Eigen3::Eigen
 )
 

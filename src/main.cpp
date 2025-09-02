@@ -19,16 +19,9 @@ int main(int argc, char* argv[]) {
 
     // Initialize renderer
     PointCloudRenderer renderer;
-    if (!renderer.initialize()) {
-        std::cerr << "Failed to initialize renderer" << std::endl;
-        return -1;
-    }
 
     // Render point cloud
     renderer.render(pointCloud);
-
-    // Cleanup
-    renderer.cleanup();
 
     return 0;
 }
