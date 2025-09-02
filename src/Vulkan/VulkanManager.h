@@ -34,6 +34,8 @@ private:
 
     uint32_t currentFrame = 0;
     bool framebufferResized = false;
+    bool useFixedViewport = false;
+    VkExtent2D fixedViewportExtent;
 
     std::vector<VkSemaphore> imageAvailableSemaphores;
     std::vector<VkSemaphore> renderFinishedSemaphores;

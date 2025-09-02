@@ -19,6 +19,11 @@ const bool enableValidationLayers = true;
 
 VulkanManager::VulkanManager(GLFWwindow* window) : window(window) {
     std::cout << "Initializing Vulkan renderer..." << std::endl;
+
+    int width, height;
+    glfwGetWindowSize(window, &width, &height);
+    fixedViewportExtent = {static_cast<uint32_t>(width), static_cast<uint32_t>(height)};
+
     createInstance();
     setupDebugMessenger();
     createSurface();
@@ -218,6 +223,14 @@ VkPresentModeKHR VulkanManager::chooseSwapPresentMode(const std::vector<VkPresen
 }
 
 VkExtent2D VulkanManager::chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities) {
+    // 如果使用固定视口，直接返回固定大小
+    if (useFixedViewport) {
+        VkExtent2D extent = {};
+        extent.width = std::clamp(extent.width, capabilities.minImageExtent.width, capabilities.maxImageExtent.width);
+        extent.height = std::clamp(extent.height, capabilities.minImageExtent.height, capabilities.maxImageExtent.height);
+        return extent;
+    }
+
     if (capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max()) {
         return capabilities.currentExtent;
     } else {
@@ -574,15 +587,24 @@ void VulkanManager::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t 
     VkViewport viewport{};
     viewport.x = 0.0f;
     viewport.y = 0.0f;
-    viewport.width = static_cast<float>(swapChainExtent.width);
-    viewport.height = static_cast<float>(swapChainExtent.height);
+    if (useFixedViewport) {
+        viewport.width = static_cast<float>(fixedViewportExtent.width);
+        viewport.height = static_cast<float>(fixedViewportExtent.height);
+    } else {
+        viewport.width = static_cast<float>(swapChainExtent.width);
+        viewport.height = static_cast<float>(swapChainExtent.height);
+    }
     viewport.minDepth = 0.0f;
     viewport.maxDepth = 1.0f;
     vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
 
     VkRect2D scissor{};
     scissor.offset = {0, 0};
-    scissor.extent = swapChainExtent;
+    if (useFixedViewport) {
+        scissor.extent = fixedViewportExtent;
+    } else {
+        scissor.extent = swapChainExtent;
+    }
     vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
     vkCmdDraw(commandBuffer, 3, 1, 0, 0);
