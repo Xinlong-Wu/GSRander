@@ -6,6 +6,8 @@
 #include <GLFW/glfw3.h>
 #include <vector>
 
+const int MAX_FRAMES_IN_FLIGHT = 2;
+
 class VulkanManager {
 private:
     bool initialized;
@@ -28,11 +30,14 @@ private:
     VkPipeline graphicsPipeline;
     std::vector<VkFramebuffer> swapChainFramebuffers;
     VkCommandPool commandPool;
-    VkCommandBuffer commandBuffer;
+    std::vector<VkCommandBuffer> commandBuffers;
 
-    VkSemaphore imageAvailableSemaphore;
-    VkSemaphore renderFinishedSemaphore;
-    VkFence inFlightFence;
+    uint32_t currentFrame = 0;
+    bool framebufferResized = false;
+
+    std::vector<VkSemaphore> imageAvailableSemaphores;
+    std::vector<VkSemaphore> renderFinishedSemaphores;
+    std::vector<VkFence> inFlightFences;
     
     // Private methods
     void createInstance();
@@ -49,11 +54,13 @@ private:
     void createGraphicsPipeline();
     void createRenderPass();
 
+    void recreateSwapChain();
+    void cleanupSwapChain();
+
     void createFramebuffers();
     void createCommandPool();
-    void createCommandBuffer();
+    void createCommandBuffers();
     void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
-
     
     void createSyncObjects();
     
@@ -67,6 +74,9 @@ public:
     void drawFrame();
     void waitForIdle() {
         vkDeviceWaitIdle(device);
+    }
+    void setFramebufferResized(bool resized) {
+        framebufferResized = resized;
     }
 };
 

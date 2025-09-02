@@ -20,7 +20,9 @@ void PointCloudRenderer::createWindow() {
     glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
     
     window = glfwCreateWindow(WIDTH, HEIGHT, "Gaussian Point Cloud Renderer", nullptr, nullptr);
-    
+    glfwSetWindowUserPointer(window, this);
+    glfwSetFramebufferSizeCallback(window, framebufferResizeCallback);
+
     if (window == nullptr) {
         throw std::runtime_error("Failed to create window!");
     }

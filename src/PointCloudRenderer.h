@@ -21,12 +21,17 @@ public:
     ~PointCloudRenderer();
 
     void render(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& pointCloud);
+    std::unique_ptr<VulkanManager> manager;
 private:
     GLFWwindow* window = nullptr;
-    std::unique_ptr<VulkanManager> manager;
 
     void createWindow();
     void mainLoop();
 };
+
+static void framebufferResizeCallback(GLFWwindow* window, int width, int height) {
+    auto render = reinterpret_cast<PointCloudRenderer*>(glfwGetWindowUserPointer(window));
+    render->manager->setFramebufferResized(true);
+}
 
 #endif // POINT_CLOUD_RENDERER_H
