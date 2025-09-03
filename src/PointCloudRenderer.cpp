@@ -1,6 +1,6 @@
 #include "PointCloudRenderer.h"
 
-PointCloudRenderer::~PointCloudRenderer() {
+GSRender::PointCloudRenderer::~PointCloudRenderer() {
     manager.reset();
 
     // Cleanup window
@@ -8,11 +8,11 @@ PointCloudRenderer::~PointCloudRenderer() {
     glfwTerminate();
 }
 
-void PointCloudRenderer::render(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& pointCloud) {
+void GSRender::PointCloudRenderer::render(const pcl::PointCloud<pcl::PointXYZRGB>::Ptr& pointCloud) {
     mainLoop();
 }
 
-void PointCloudRenderer::createWindow() {
+void GSRender::PointCloudRenderer::createWindow() {
     glfwInit();
     
     // Do not create OpenGL context
@@ -21,14 +21,14 @@ void PointCloudRenderer::createWindow() {
     
     window = glfwCreateWindow(WIDTH, HEIGHT, "Gaussian Point Cloud Renderer", nullptr, nullptr);
     glfwSetWindowUserPointer(window, this);
-    glfwSetFramebufferSizeCallback(window, framebufferResizeCallback);
+    glfwSetFramebufferSizeCallback(window, GSRender::framebufferResizeCallback);
 
     if (window == nullptr) {
         throw std::runtime_error("Failed to create window!");
     }
 }
 
-void PointCloudRenderer::mainLoop() {
+void GSRender::PointCloudRenderer::mainLoop() {
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
         manager->drawFrame();

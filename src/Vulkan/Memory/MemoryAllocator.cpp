@@ -4,16 +4,10 @@
 #include <memory>
 #include <stdexcept>
 
-using namespace GSRender;
-
-MemoryAllocator::MemoryAllocator(VkPhysicalDevice physicalDevice, VkDevice device, VkDeviceSize minBlockSize)
+GSRender::MemoryAllocator::MemoryAllocator(VkPhysicalDevice physicalDevice, VkDevice device, VkDeviceSize minBlockSize)
     : physicalDevice(physicalDevice), device(device), minBlockSize(minBlockSize) {}
 
-MemoryAllocator::~MemoryAllocator() {
-    clear();
-}
-
-uint32_t MemoryAllocator::findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties) {
+uint32_t GSRender::MemoryAllocator::findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties) {
     VkPhysicalDeviceMemoryProperties memProperties;
     vkGetPhysicalDeviceMemoryProperties(physicalDevice, &memProperties);
 
@@ -26,7 +20,7 @@ uint32_t MemoryAllocator::findMemoryType(uint32_t typeFilter, VkMemoryPropertyFl
     throw std::runtime_error("failed to find suitable memory type!");
 }
 
-const GSRender::Memory* MemoryAllocator::allocate(VkDeviceSize size, VkDeviceSize alignment, VkMemoryPropertyFlags properties, uint32_t memoryTypeIndex) {
+const GSRender::Memory* GSRender::MemoryAllocator::allocate(VkDeviceSize size, VkDeviceSize alignment, VkMemoryPropertyFlags properties, uint32_t memoryTypeIndex) {
     auto [memoryBlocksIt, inserted] = memoryPools.try_emplace(
         memoryTypeIndex,
         std::vector<std::unique_ptr<GSRender::MemoryBlock>>()
@@ -60,12 +54,12 @@ const GSRender::Memory* MemoryAllocator::allocate(VkDeviceSize size, VkDeviceSiz
     return gsMemory;
 }
 
-void MemoryAllocator::free(const GSRender::Memory* memory) {
+void GSRender::MemoryAllocator::free(const GSRender::Memory* memory) {
     free(memory->getDeviceMemory(), memory->getOffset(), memory->getMemoryTypeIndex());
     return;
 }
 
-void MemoryAllocator::free(VkDeviceMemory memory, VkDeviceSize offset, uint32_t memoryTypeIndex) {
+void GSRender::MemoryAllocator::free(VkDeviceMemory memory, VkDeviceSize offset, uint32_t memoryTypeIndex) {
     auto memoryBlocksIt = memoryPools.find(memoryTypeIndex);
     if(memoryBlocksIt == memoryPools.end()) {
         throw std::runtime_error("failed to find memory blocks with specific MemoryType!");
@@ -85,13 +79,13 @@ void MemoryAllocator::free(VkDeviceMemory memory, VkDeviceSize offset, uint32_t 
     }
 }
 
-void MemoryAllocator::clear() {
+void GSRender::MemoryAllocator::clear() {
     // 释放所有内存块
     memoryPools.clear();
     memoryToBufferMap.clear();
 }
 
-std::unique_ptr<GSRender::Buffer> MemoryAllocator::createBufferWithMemory(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, const GSRender::Memory* memory) {
+std::unique_ptr<GSRender::Buffer> GSRender::MemoryAllocator::createBufferWithMemory(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, const GSRender::Memory* memory) {
     GSRender::Buffer* gsBuffer = new GSRender::Buffer(device, size, usage, properties);
     try {
         bindMemory(gsBuffer, memory);
@@ -102,7 +96,7 @@ std::unique_ptr<GSRender::Buffer> MemoryAllocator::createBufferWithMemory(VkDevi
     }
 }
 
-std::unique_ptr<GSRender::Buffer> MemoryAllocator::createBufferWithMemory(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties) {
+std::unique_ptr<GSRender::Buffer> GSRender::MemoryAllocator::createBufferWithMemory(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties) {
     GSRender::Buffer* gsBuffer = new GSRender::Buffer(device, size, usage, properties);
     const GSRender::Memory* gsMemory = nullptr;
 
@@ -126,12 +120,12 @@ std::unique_ptr<GSRender::Buffer> MemoryAllocator::createBufferWithMemory(VkDevi
     }
 }
 
-std::unique_ptr<GSRender::Buffer> MemoryAllocator::createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties) {
+std::unique_ptr<GSRender::Buffer> GSRender::MemoryAllocator::createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties) {
     GSRender::Buffer* gsBuffer = new GSRender::Buffer(device, size, usage, properties);
     return std::unique_ptr<GSRender::Buffer>(gsBuffer);
 }
 
-void MemoryAllocator::destroyBuffer(std::unique_ptr<GSRender::Buffer> buffer) {
+void GSRender::MemoryAllocator::destroyBuffer(std::unique_ptr<GSRender::Buffer> buffer) {
     if (!buffer) {
         return;
     }
@@ -143,7 +137,7 @@ void MemoryAllocator::destroyBuffer(std::unique_ptr<GSRender::Buffer> buffer) {
     }
 }
 
-void MemoryAllocator::freeBuffer(std::unique_ptr<GSRender::Buffer> buffer) {
+void GSRender::MemoryAllocator::freeBuffer(std::unique_ptr<GSRender::Buffer> buffer) {
     if (!buffer) {
         return;
     }
@@ -155,7 +149,7 @@ void MemoryAllocator::freeBuffer(std::unique_ptr<GSRender::Buffer> buffer) {
     }
 }
 
-void MemoryAllocator::bindMemory(GSRender::Buffer* buffer, const GSRender::Memory* memory) {
+void GSRender::MemoryAllocator::bindMemory(GSRender::Buffer* buffer, const GSRender::Memory* memory) {
     if (!buffer || !memory) {
         throw std::runtime_error("Invalid buffer or memory pointer!");
     }

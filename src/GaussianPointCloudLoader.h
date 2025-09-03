@@ -5,6 +5,8 @@
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 
+namespace GSRender {
+
 class GaussianPointCloudLoader {
 public:
     GaussianPointCloudLoader() = default;
@@ -15,5 +17,7 @@ public:
 private:
     // Private members for file parsing would go here
 };
+
+} // namespace GSRender
 
 #endif // GAUSSIAN_POINT_CLOUD_LOADER_H

@@ -1,10 +1,12 @@
-#ifndef QUEUE_FAMILY_H
-#define QUEUE_FAMILY_H
+#ifndef GSRENDER_QUEUE_FAMILY_H
+#define GSRENDER_QUEUE_FAMILY_H
 
 #include <vulkan/vulkan.h>
 
 #include <optional>
 #include <vector>
+
+namespace GSRender {
 
 struct QueueFamily {
     std::optional<uint32_t> graphicsFamily;
@@ -46,5 +48,7 @@ struct QueueFamily {
         return indices;
     }
 };
+
+} // namespace GSRender
 
 #endif // QUEUE_FAMILY_H

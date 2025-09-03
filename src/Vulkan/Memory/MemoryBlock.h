@@ -1,5 +1,5 @@
-#ifndef MEMORY_BLOCK_H
-#define MEMORY_BLOCK_H
+#ifndef GSRENDER_MEMORY_BLOCK_H
+#define GSRENDER_MEMORY_BLOCK_H
 
 #include <vulkan/vulkan.h>
 #include <list>

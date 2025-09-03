@@ -1,5 +1,5 @@
-#ifndef POINT_CLOUD_RENDERER_H
-#define POINT_CLOUD_RENDERER_H
+#ifndef GSRENDER_POINT_CLOUD_RENDERER_H
+#define GSRENDER_POINT_CLOUD_RENDERER_H
 
 #include "Vulkan/VulkanManager.h"
 
@@ -8,6 +8,8 @@
 #include <pcl/point_types.h>
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
+
+namespace GSRender {
 
 const uint32_t WIDTH = 800;
 const uint32_t HEIGHT = 600;
@@ -33,5 +35,7 @@ static void framebufferResizeCallback(GLFWwindow* window, int width, int height)
     auto render = reinterpret_cast<PointCloudRenderer*>(glfwGetWindowUserPointer(window));
     render->manager->setFramebufferResized(true);
 }
+
+} // namespace GSRender
 
 #endif // POINT_CLOUD_RENDERER_H

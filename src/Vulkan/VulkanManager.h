@@ -1,7 +1,7 @@
-#ifndef VULKAN_MANAGER_H
-#define VULKAN_MANAGER_H
+#ifndef GSRENDER_VULKAN_MANAGER_H
+#define GSRENDER_VULKAN_MANAGER_H
 
-#include "MemoryAllocator.h"
+#include "Memory/MemoryAllocator.h"
 
 #include <memory>
 #include <vulkan/vulkan.h>

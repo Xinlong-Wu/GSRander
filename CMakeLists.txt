@@ -94,14 +94,14 @@ if(GLSL_COMPILER)
         endif()
         
         add_custom_command(
-            OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${SHADER_NAME}_${SHADER_EXT}.spv
+            OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${SHADER_NAME}${SHADER_EXT}.spv
             COMMAND ${GLSL_COMPILER} --target-env vulkan1.0 -o ${CMAKE_CURRENT_BINARY_DIR}/${SHADER_NAME}${SHADER_EXT}.spv ${CMAKE_CURRENT_SOURCE_DIR}/shaders/${SHADER_FILE}
             DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/shaders/${SHADER_FILE}
             COMMENT "Compiling ${SHADER_TYPE} shader ${SHADER_FILE}"
         )
         
         # Add to the list of shader outputs
-        list(APPEND SHADER_OUTPUTS ${CMAKE_CURRENT_BINARY_DIR}/${SHADER_NAME}_${SHADER_EXT}.spv)
+        list(APPEND SHADER_OUTPUTS ${CMAKE_CURRENT_BINARY_DIR}/${SHADER_NAME}${SHADER_EXT}.spv)
         set(SHADER_OUTPUTS ${SHADER_OUTPUTS} PARENT_SCOPE)
     endfunction()
 

@@ -1,9 +1,11 @@
-#ifndef SWAP_CHAIN_DETAILS_H
-#define SWAP_CHAIN_DETAILS_H
+#ifndef GSRENDER_SWAP_CHAIN_DETAILS_H
+#define GSRENDER_SWAP_CHAIN_DETAILS_H
 
 #include <vector>
 
 #include <vulkan/vulkan.h>
+
+namespace GSRender {
 
 struct SwapChainDetails {
     VkSurfaceCapabilitiesKHR capabilities;
@@ -33,5 +35,7 @@ struct SwapChainDetails {
         return details;
     }
 };
+
+} // namespace GSRender
 
 #endif // SWAP_CHAIN_DETAILS_H

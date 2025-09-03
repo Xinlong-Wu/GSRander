@@ -1,5 +1,5 @@
-#ifndef MEMORY_ALLOCATOR_H
-#define MEMORY_ALLOCATOR_H
+#ifndef GSRENDER_MEMORY_ALLOCATOR_H
+#define GSRENDER_MEMORY_ALLOCATOR_H
 
 #include "Buffer.h"
 #include "MemoryBlock.h"
@@ -17,7 +17,6 @@ private:
     VkDeviceSize minBlockSize; // 每个内存块的大小
     
     // 存储内存块的向量，每个块包含多个缓冲区分配
-    // std::vector<std::unique_ptr<GSRender::MemoryBlock>> memoryBlocks;
     std::unordered_map<uint32_t, std::vector<std::unique_ptr<GSRender::MemoryBlock>>> memoryPools;
     
     // GSMemory 到 Buffer 的映射
@@ -29,7 +28,7 @@ private:
     
 public:
     MemoryAllocator(VkPhysicalDevice physicalDevice, VkDevice device, VkDeviceSize minBlockSize = 64 * 1024 * 1024); // 默认块大小为64MB
-    ~MemoryAllocator();
+    ~MemoryAllocator() { clear(); };
     
     const GSRender::Memory* allocate(VkDeviceSize size, VkDeviceSize alignment, VkMemoryPropertyFlags properties, uint32_t memoryTypeIndex);
     void free(const GSRender::Memory* memory);

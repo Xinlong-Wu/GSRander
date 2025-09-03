@@ -5,10 +5,14 @@ find_package(Vulkan REQUIRED)
 # Find glfw3
 find_library_with_env_fallback(glfw3 FALSE)
 
-add_library(render STATIC
+add_subdirectory(Memory)
+set(VULKAN_DRIVER_SRC_LIST
     VulkanManager.cpp
     utils/VkUtils.cpp
+    ${MEMORY_SRC_LIST}
 )
+
+add_library(render STATIC ${VULKAN_DRIVER_SRC_LIST})
 
 # Link glfw3 library (either from find_package or from environment variable)
 if(glfw3_FOUND)

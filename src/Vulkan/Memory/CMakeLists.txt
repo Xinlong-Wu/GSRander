@@ -1,0 +1,7 @@
+set(MEMORY_SRC_LIST
+    ${CMAKE_CURRENT_SOURCE_DIR}/MemoryAllocator.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/MemoryBlock.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Buffer.cpp
+
+    PARENT_SCOPE
+)

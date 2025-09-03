@@ -9,7 +9,7 @@ int main(int argc, char* argv[]) {
     }
 
     // Load Gaussian point cloud
-    GaussianPointCloudLoader loader;
+    GSRender::GaussianPointCloudLoader loader;
     auto pointCloud = loader.loadFromFile(argv[1]);
     
     if (!pointCloud || pointCloud->empty()) {
@@ -18,7 +18,7 @@ int main(int argc, char* argv[]) {
     }
 
     // Initialize renderer
-    PointCloudRenderer renderer;
+    GSRender::PointCloudRenderer renderer;
 
     // Render point cloud
     renderer.render(pointCloud);

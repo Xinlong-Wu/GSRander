@@ -4,9 +4,7 @@
 #include <memory>
 #include <stdexcept>
 
-using namespace GSRender;
-
-MemoryBlock::MemoryBlock(VkDevice device, VkDeviceMemory memory, VkDeviceSize size, uint32_t memoryTypeIndex) : device(device), memory(memory), size(size), memoryTypeIndex(memoryTypeIndex) {
+GSRender::MemoryBlock::MemoryBlock(VkDevice device, VkDeviceMemory memory, VkDeviceSize size, uint32_t memoryTypeIndex) : device(device), memory(memory), size(size), memoryTypeIndex(memoryTypeIndex) {
     allocations.push_back(std::unique_ptr<Memory>(new Memory(memoryTypeIndex,memory, 0, size, 0, false)));
 }
 

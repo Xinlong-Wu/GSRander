@@ -5,7 +5,7 @@
 #include <vector>
 #include <glm/glm.hpp>
 
-pcl::PointCloud<pcl::PointXYZRGB>::Ptr GaussianPointCloudLoader::loadFromFile(const std::string& filename) {
+pcl::PointCloud<pcl::PointXYZRGB>::Ptr GSRender::GaussianPointCloudLoader::loadFromFile(const std::string& filename) {
     auto pointCloud = pcl::PointCloud<pcl::PointXYZRGB>::Ptr(new pcl::PointCloud<pcl::PointXYZRGB>);
     
     std::ifstream file(filename);

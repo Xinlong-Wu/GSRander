@@ -1,9 +1,11 @@
-#ifndef VERTEX_H
-#define VERTEX_H
+#ifndef GSRENDER_VERTEX_H
+#define GSRENDER_VERTEX_H
 
 #include <glm/glm.hpp>
 #include <vulkan/vulkan.h>
 #include <array>
+
+namespace GSRender {
 
 struct Vertex {
     glm::vec2 pos;
@@ -33,5 +35,7 @@ struct Vertex {
         return attributeDescriptions;
     }
 };
+
+} // namespace GSRender
 
 #endif // VERTEX_H

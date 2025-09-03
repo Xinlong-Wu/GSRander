@@ -1,10 +1,8 @@
 #include "VulkanManager.h"
-#include "MemoryBlock.h"
 #include "SwapChainDetails.h"
 #include "utils/VkUtils.h"
 #include "QueueFamily.h"
 #include "Vertex.h"
-#include "MemoryAllocator.h"
 
 #include <iostream>
 #include <set>
@@ -14,7 +12,7 @@ const std::vector<const char*> validationLayers = {
     "VK_LAYER_KHRONOS_validation"
 };
 
-const std::vector<Vertex> vertices = {
+const std::vector<GSRender::Vertex> vertices = {
     {{0.0f, -0.5f}, {1.0f, 1.0f, 1.0f}},
     {{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
     {{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}
@@ -26,9 +24,7 @@ const bool enableValidationLayers = false;
 const bool enableValidationLayers = true;
 #endif
 
-using namespace GSRender;
-
-VulkanManager::VulkanManager(GLFWwindow* window) : window(window) {
+GSRender::VulkanManager::VulkanManager(GLFWwindow* window) : window(window) {
     std::cout << "Initializing Vulkan renderer..." << std::endl;
 
     int width, height;
@@ -41,7 +37,7 @@ VulkanManager::VulkanManager(GLFWwindow* window) : window(window) {
     pickPhysicalDevice();
     createLogicalDevice();
     
-    // 初始化内存分配器
+    // init memory allocator
     memoryAllocator = std::make_unique<MemoryAllocator>(physicalDevice, device);
     
     createSwapChain();
@@ -56,7 +52,7 @@ VulkanManager::VulkanManager(GLFWwindow* window) : window(window) {
     createSyncObjects();
 }
 
-VulkanManager::~VulkanManager() {
+GSRender::VulkanManager::~VulkanManager() {
     if (!initialized) {
         return;
     }
@@ -93,7 +89,7 @@ VulkanManager::~VulkanManager() {
     std::cout << "Vulkan resources cleaned up successfully!" << std::endl;
 }
 
-void VulkanManager::createInstance() {
+void GSRender::VulkanManager::createInstance() {
     if (enableValidationLayers && !checkValidationLayerSupport()) {
         throw std::runtime_error("Validation layers requested, but not available!");
     }
@@ -132,7 +128,7 @@ void VulkanManager::createInstance() {
     }
 }
 
-void VulkanManager::setupDebugMessenger() {
+void GSRender::VulkanManager::setupDebugMessenger() {
     if (!enableValidationLayers) return;
 
     VkDebugUtilsMessengerCreateInfoEXT createInfo{};
@@ -143,7 +139,7 @@ void VulkanManager::setupDebugMessenger() {
     }
 }
 
-void VulkanManager::pickPhysicalDevice() {
+void GSRender::VulkanManager::pickPhysicalDevice() {
     uint32_t deviceCount = 0;
     vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr);
 
@@ -181,7 +177,7 @@ void VulkanManager::pickPhysicalDevice() {
     }
 }
 
-void VulkanManager::createLogicalDevice() {
+void GSRender::VulkanManager::createLogicalDevice() {
     QueueFamily indices = QueueFamily::findQueueFamilies(physicalDevice, surface);
 
     std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
@@ -218,13 +214,13 @@ void VulkanManager::createLogicalDevice() {
     vkGetDeviceQueue(device, indices.presentFamily.value(), 0, &presentQueue);
 }
 
-void VulkanManager::createSurface() {
+void GSRender::VulkanManager::createSurface() {
     if (glfwCreateWindowSurface(instance, window, nullptr, &surface) != VK_SUCCESS) {
         throw std::runtime_error("failed to create window surface!");
     }
 }
 
-VkSurfaceFormatKHR VulkanManager::chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats) {
+VkSurfaceFormatKHR GSRender::VulkanManager::chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats) {
     for (const auto& availableFormat : availableFormats) {
         if (availableFormat.format == VK_FORMAT_B8G8R8A8_SRGB && availableFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
             return availableFormat;
@@ -234,7 +230,7 @@ VkSurfaceFormatKHR VulkanManager::chooseSwapSurfaceFormat(const std::vector<VkSu
     return availableFormats[0];
 }
 
-VkPresentModeKHR VulkanManager::chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes) {
+VkPresentModeKHR GSRender::VulkanManager::chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes) {
     for (const auto& availablePresentMode : availablePresentModes) {
         if (availablePresentMode == VK_PRESENT_MODE_MAILBOX_KHR) {
             return availablePresentMode;
@@ -244,7 +240,7 @@ VkPresentModeKHR VulkanManager::chooseSwapPresentMode(const std::vector<VkPresen
     return VK_PRESENT_MODE_FIFO_KHR;
 }
 
-VkExtent2D VulkanManager::chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities) {
+VkExtent2D GSRender::VulkanManager::chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities) {
     // 如果使用固定视口，直接返回固定大小
     if (useFixedViewport) {
         VkExtent2D extent = {};
@@ -271,7 +267,7 @@ VkExtent2D VulkanManager::chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capab
     }
 }
 
-void VulkanManager::createSwapChain() {
+void GSRender::VulkanManager::createSwapChain() {
     SwapChainDetails swapChainSupport = SwapChainDetails::querySwapChainDetails(physicalDevice, surface);
 
     VkSurfaceFormatKHR surfaceFormat = chooseSwapSurfaceFormat(swapChainSupport.formats);
@@ -323,7 +319,7 @@ void VulkanManager::createSwapChain() {
     swapChainExtent = extent;
 }
 
-void VulkanManager::createImageViews() {
+void GSRender::VulkanManager::createImageViews() {
     swapChainImageViews.resize(swapChainImages.size());
     for (size_t i = 0; i < swapChainImages.size(); i++) {
         VkImageViewCreateInfo createInfo{};
@@ -347,7 +343,7 @@ void VulkanManager::createImageViews() {
     }
 }
 
-void VulkanManager::createGraphicsPipeline() {
+void GSRender::VulkanManager::createGraphicsPipeline() {
     auto vertShaderCode = readShaderBinary("shader.vert.spv");
     auto fragShaderCode = readShaderBinary("shader.frag.spv");
 
@@ -492,7 +488,7 @@ void VulkanManager::createGraphicsPipeline() {
     vkDestroyShaderModule(device, vertShaderModule, nullptr);
 }
 
-void VulkanManager::createRenderPass() {
+void GSRender::VulkanManager::createRenderPass() {
     VkAttachmentDescription colorAttachment{};
     colorAttachment.format = swapChainImageFormat;
     colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
@@ -537,7 +533,7 @@ void VulkanManager::createRenderPass() {
     }
 }
 
-void VulkanManager::createFramebuffers() {
+void GSRender::VulkanManager::createFramebuffers() {
     swapChainFramebuffers.resize(swapChainImageViews.size());
     for (size_t i = 0; i < swapChainImageViews.size(); i++) {
         VkImageView attachments[] = {
@@ -559,7 +555,7 @@ void VulkanManager::createFramebuffers() {
     }
 }
 
-void VulkanManager::createCommandPool() {
+void GSRender::VulkanManager::createCommandPool() {
     QueueFamily queueFamilyIndices = QueueFamily::findQueueFamilies(physicalDevice, surface);
 
     VkCommandPoolCreateInfo poolInfo{};
@@ -572,7 +568,7 @@ void VulkanManager::createCommandPool() {
     }
 }
 
-void VulkanManager::createCommandBuffers() {
+void GSRender::VulkanManager::createCommandBuffers() {
     commandBuffers.resize(MAX_FRAMES_IN_FLIGHT);
     VkCommandBufferAllocateInfo allocInfo{};
     allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
@@ -585,7 +581,7 @@ void VulkanManager::createCommandBuffers() {
     }
 }
 
-void VulkanManager::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex) {
+void GSRender::VulkanManager::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex) {
     VkCommandBufferBeginInfo beginInfo{};
     beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
     beginInfo.flags = 0; // Optional
@@ -647,7 +643,7 @@ void VulkanManager::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t 
     }
 }
 
-void VulkanManager::createSyncObjects() {
+void GSRender::VulkanManager::createSyncObjects() {
     imageAvailableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
     renderFinishedSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
     inFlightFences.resize(MAX_FRAMES_IN_FLIGHT);
@@ -669,7 +665,7 @@ void VulkanManager::createSyncObjects() {
     }
 }
 
-void VulkanManager::drawFrame() {
+void GSRender::VulkanManager::drawFrame() {
     vkWaitForFences(device, 1, &inFlightFences[currentFrame], VK_TRUE, UINT64_MAX);
 
     uint32_t imageIndex;
@@ -731,7 +727,7 @@ void VulkanManager::drawFrame() {
     currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
 }
 
-void VulkanManager::cleanupSwapChain() {
+void GSRender::VulkanManager::cleanupSwapChain() {
     for (auto framebuffer : swapChainFramebuffers) {
         vkDestroyFramebuffer(device, framebuffer, nullptr);
     }
@@ -743,7 +739,7 @@ void VulkanManager::cleanupSwapChain() {
     vkDestroySwapchainKHR(device, swapChain, nullptr);
 }
 
-void VulkanManager::recreateSwapChain() {
+void GSRender::VulkanManager::recreateSwapChain() {
     int width = 0, height = 0;
     glfwGetFramebufferSize(window, &width, &height);
     while (width == 0 || height == 0) {
@@ -758,7 +754,7 @@ void VulkanManager::recreateSwapChain() {
     createFramebuffers();
 }
 
-void VulkanManager::createVertexBuffer() {
+void GSRender::VulkanManager::createVertexBuffer() {
     VkDeviceSize bufferSize = sizeof(vertices[0]) * vertices.size();
     std::unique_ptr<GSRender::Buffer> stagingBuffer = memoryAllocator->createBufferWithMemory(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
     const GSRender::Memory* stagingBufferMemory = stagingBuffer->getBindMemory();
@@ -781,7 +777,7 @@ void VulkanManager::createVertexBuffer() {
 
 /// ======================= Helper Methods ======================= ///
 
-void VulkanManager::copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size) {
+void GSRender::VulkanManager::copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size) {
     VkCommandBufferAllocateInfo allocInfo{};
     allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
     allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
@@ -816,7 +812,7 @@ void VulkanManager::copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceS
     vkFreeCommandBuffers(device, commandPool, 1, &commandBuffer);
 }
 
-bool VulkanManager::checkValidationLayerSupport() {
+bool GSRender::VulkanManager::checkValidationLayerSupport() {
     uint32_t layerCount;
     vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
 
@@ -841,7 +837,7 @@ bool VulkanManager::checkValidationLayerSupport() {
     return true;
 }
 
-std::vector<const char*> VulkanManager::getRequiredExtensions() {
+std::vector<const char*> GSRender::VulkanManager::getRequiredExtensions() {
     uint32_t glfwExtensionCount = 0;
     const char** glfwExtensions;
     glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
@@ -855,7 +851,7 @@ std::vector<const char*> VulkanManager::getRequiredExtensions() {
     return extensions;
 }
 
-void VulkanManager::populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo) {
+void GSRender::VulkanManager::populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo) {
     createInfo = {};
     createInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
     createInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;

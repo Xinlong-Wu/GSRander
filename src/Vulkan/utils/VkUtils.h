@@ -1,14 +1,16 @@
-#ifndef VK_UTILS_H
-#define VK_UTILS_H
+#ifndef GSRENDER_VK_UTILS_H
+#define GSRENDER_VK_UTILS_H
 
 #include <iostream>
 #include <vector>
 
 #include <vulkan/vulkan.h>
 
+namespace GSRender {
+
 void DestroyDebugUtilsMessengerEXT(VkInstance instance,
-                                   VkDebugUtilsMessengerEXT debugMessenger,
-                                   const VkAllocationCallbacks *pAllocator);
+                                VkDebugUtilsMessengerEXT debugMessenger,
+                                const VkAllocationCallbacks *pAllocator);
 
 VkResult CreateDebugUtilsMessengerEXT(
     VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT *pCreateInfo,
@@ -40,4 +42,7 @@ std::vector<char> readShaderBinary(const std::string &filename);
 VkShaderModule createShaderModule(VkDevice device, const std::vector<char>& code);
 
 uint32_t findMemoryType(VkPhysicalDevice physicalDevice, uint32_t typeFilter, VkMemoryPropertyFlags properties);
+
+}
+
 #endif // VK_UTILS_H

@@ -7,7 +7,7 @@
 #include <filesystem>
 #include <iostream>
 
-void DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT debugMessenger, const VkAllocationCallbacks* pAllocator) {
+void GSRender::DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT debugMessenger, const VkAllocationCallbacks* pAllocator) {
     auto func = (PFN_vkDestroyDebugUtilsMessengerEXT) vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT");
     if (func != nullptr) {
         func(instance, debugMessenger, pAllocator);
@@ -15,7 +15,7 @@ void DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT
 }
 
 
-VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pDebugMessenger) {
+VkResult GSRender::CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pDebugMessenger) {
     auto func = (PFN_vkCreateDebugUtilsMessengerEXT) vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
     if (func != nullptr) {
         return func(instance, pCreateInfo, pAllocator, pDebugMessenger);
@@ -24,7 +24,7 @@ VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMes
     }
 }
 
-bool isDeviceSuitable(VkPhysicalDevice device, VkSurfaceKHR surface) {
+bool GSRender::isDeviceSuitable(VkPhysicalDevice device, VkSurfaceKHR surface) {
     QueueFamily queueFamily = QueueFamily::findQueueFamilies(device, surface);
 
     bool extensionsSupported = checkDeviceExtensionSupport(device);
@@ -38,7 +38,7 @@ bool isDeviceSuitable(VkPhysicalDevice device, VkSurfaceKHR surface) {
     return queueFamily.isComplete() && extensionsSupported && swapChainAdequate;
 }
 
-int rateDeviceSuitability(VkPhysicalDevice device, VkSurfaceKHR surface) {
+int GSRender::rateDeviceSuitability(VkPhysicalDevice device) {
     VkPhysicalDeviceProperties deviceProperties;
     VkPhysicalDeviceFeatures deviceFeatures;
     vkGetPhysicalDeviceProperties(device, &deviceProperties);
@@ -62,7 +62,7 @@ int rateDeviceSuitability(VkPhysicalDevice device, VkSurfaceKHR surface) {
     return score;
 }
 
-bool checkDeviceExtensionSupport(VkPhysicalDevice device) {
+bool GSRender::checkDeviceExtensionSupport(VkPhysicalDevice device) {
      uint32_t extensionCount;
     vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, nullptr);
 
@@ -78,7 +78,7 @@ bool checkDeviceExtensionSupport(VkPhysicalDevice device) {
     return requiredExtensions.empty();
 }
 
-std::vector<char> readShaderBinary(const std::string &filename) {
+std::vector<char> GSRender::readShaderBinary(const std::string &filename) {
     std::ifstream file(filename, std::ios::ate | std::ios::binary);
 
     if (!file.is_open()) {
@@ -97,7 +97,7 @@ std::vector<char> readShaderBinary(const std::string &filename) {
     return buffer;
 }
 
-VkShaderModule createShaderModule(VkDevice device, const std::vector<char>& code)  {
+VkShaderModule GSRender::createShaderModule(VkDevice device, const std::vector<char>& code)  {
     VkShaderModuleCreateInfo createInfo{};
     createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
     createInfo.codeSize = code.size();
@@ -111,7 +111,7 @@ VkShaderModule createShaderModule(VkDevice device, const std::vector<char>& code
     return shaderModule;
 }
 
-uint32_t findMemoryType(VkPhysicalDevice physicalDevice, uint32_t typeFilter, VkMemoryPropertyFlags properties) {
+uint32_t GSRender::findMemoryType(VkPhysicalDevice physicalDevice, uint32_t typeFilter, VkMemoryPropertyFlags properties) {
     VkPhysicalDeviceMemoryProperties memProperties;
     vkGetPhysicalDeviceMemoryProperties(physicalDevice, &memProperties);
 

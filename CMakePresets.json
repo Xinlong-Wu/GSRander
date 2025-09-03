@@ -11,7 +11,9 @@
         "rhs": "Windows"
       },
       "cacheVariables": {
-        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "CMAKE_CXX_FLAGS": "/utf-8 /EHsc",
+        "CMAKE_C_FLAGS": "/utf-8 /EHsc"
       }
     },
     {
