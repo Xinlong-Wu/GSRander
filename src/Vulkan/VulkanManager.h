@@ -1,6 +1,7 @@
 #ifndef GSRENDER_VULKAN_MANAGER_H
 #define GSRENDER_VULKAN_MANAGER_H
 
+#include "Memory/Buffer.h"
 #include "Memory/MemoryAllocator.h"
 
 #include <memory>
@@ -47,7 +48,7 @@ private:
     std::vector<VkFence> inFlightFences;
 
     std::unique_ptr<GSRender::Buffer> vertexBuffer;
-    // GSRender::Memory* vertexBufferMemory;
+    std::unique_ptr<GSRender::Buffer> indexBuffer;
     
     // 内存分配器
     std::unique_ptr<GSRender::MemoryAllocator> memoryAllocator;
@@ -78,6 +79,7 @@ private:
     void createSyncObjects();
 
     void createVertexBuffer();
+    void createIndexBuffer();
 
     // helper methods
     void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);

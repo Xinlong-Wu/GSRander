@@ -13,9 +13,14 @@ const std::vector<const char*> validationLayers = {
 };
 
 const std::vector<GSRender::Vertex> vertices = {
-    {{0.0f, -0.5f}, {1.0f, 1.0f, 1.0f}},
-    {{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
-    {{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}
+    {{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}},
+    {{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}},
+    {{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}},
+    {{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}}
+};
+
+const std::vector<uint16_t> indices = {
+    0, 1, 2, 2, 3, 0
 };
 
 #ifdef NDEBUG
@@ -48,6 +53,7 @@ GSRender::VulkanManager::VulkanManager(GLFWwindow* window) : window(window) {
     createFramebuffers();
     createCommandPool();
     createVertexBuffer();
+    createIndexBuffer();
     createCommandBuffers();
     createSyncObjects();
 }
@@ -59,21 +65,23 @@ GSRender::VulkanManager::~VulkanManager() {
 
     cleanupSwapChain();
 
-    // 使用内存分配器来释放内存和Buffer
-    memoryAllocator->freeBuffer(std::move(vertexBuffer));
-
     vkDestroyPipeline(device, graphicsPipeline, nullptr);
     vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
     vkDestroyRenderPass(device, renderPass, nullptr);
 
-    for (auto imageView : swapChainImageViews) {
-        vkDestroyImageView(device, imageView, nullptr);
-    }
-
-    vkDestroySwapchainKHR(device, swapChain, nullptr);
-
+    // 使用内存分配器来释放内存和Buffer
+    memoryAllocator->freeBuffer(std::move(vertexBuffer));
+    memoryAllocator->freeBuffer(std::move(indexBuffer));
     // 清理内存分配器
     memoryAllocator.reset();
+
+    for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+        vkDestroySemaphore(device, renderFinishedSemaphores[i], nullptr);
+        vkDestroySemaphore(device, imageAvailableSemaphores[i], nullptr);
+        vkDestroyFence(device, inFlightFences[i], nullptr);
+    }
+
+    vkDestroyCommandPool(device, commandPool, nullptr);
 
     vkDestroyDevice(device, nullptr);
 
@@ -633,8 +641,9 @@ void GSRender::VulkanManager::recordCommandBuffer(VkCommandBuffer commandBuffer,
     VkBuffer vertexBuffers[] = {vertexBuffer->getVkBuffer()};
     VkDeviceSize offsets[] = {0};
     vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
+    vkCmdBindIndexBuffer(commandBuffer, indexBuffer->getVkBuffer(), 0, VK_INDEX_TYPE_UINT16);
 
-    vkCmdDraw(commandBuffer, static_cast<uint32_t>(vertices.size()), 1, 0, 0);
+    vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
 
     vkCmdEndRenderPass(commandBuffer);
 
@@ -770,6 +779,27 @@ void GSRender::VulkanManager::createVertexBuffer() {
 
     vertexBuffer = memoryAllocator->createBufferWithMemory(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
     copyBuffer(stagingBuffer->getVkBuffer(), vertexBuffer->getVkBuffer(), bufferSize);
+
+    // 使用内存分配器来释放内存和Buffer
+    memoryAllocator->freeBuffer(std::move(stagingBuffer));
+}
+
+void GSRender::VulkanManager::createIndexBuffer() {
+    VkDeviceSize bufferSize = sizeof(indices[0]) * indices.size();
+    std::unique_ptr<GSRender::Buffer> stagingBuffer = memoryAllocator->createBufferWithMemory(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+    const GSRender::Memory* stagingBufferMemory = stagingBuffer->getBindMemory();
+
+    void* data;
+    VkResult mapResult = vkMapMemory(device, stagingBufferMemory->getDeviceMemory(), stagingBufferMemory->getOffset(), bufferSize, 0, &data);
+    if (mapResult != VK_SUCCESS) {
+        throw std::runtime_error("Failed to map staging buffer memory!");
+    }
+    
+    memcpy(data, indices.data(), (size_t) bufferSize);
+    vkUnmapMemory(device, stagingBufferMemory->getDeviceMemory());
+
+    indexBuffer = memoryAllocator->createBufferWithMemory(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+    copyBuffer(stagingBuffer->getVkBuffer(), indexBuffer->getVkBuffer(), bufferSize);
 
     // 使用内存分配器来释放内存和Buffer
     memoryAllocator->freeBuffer(std::move(stagingBuffer));
