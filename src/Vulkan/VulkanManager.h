@@ -1,10 +1,15 @@
 #ifndef VULKAN_MANAGER_H
 #define VULKAN_MANAGER_H
 
+#include "MemoryAllocator.h"
+
+#include <memory>
 #include <vulkan/vulkan.h>
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 #include <vector>
+
+namespace GSRender {
 
 const int MAX_FRAMES_IN_FLIGHT = 2;
 
@@ -41,8 +46,11 @@ private:
     std::vector<VkSemaphore> renderFinishedSemaphores;
     std::vector<VkFence> inFlightFences;
 
-    VkBuffer vertexBuffer;
-    VkDeviceMemory vertexBufferMemory;
+    std::unique_ptr<GSRender::Buffer> vertexBuffer;
+    // GSRender::Memory* vertexBufferMemory;
+    
+    // 内存分配器
+    std::unique_ptr<GSRender::MemoryAllocator> memoryAllocator;
     
     // Private methods
     void createInstance();
@@ -70,8 +78,7 @@ private:
     void createSyncObjects();
 
     void createVertexBuffer();
-    void VulkanManager::createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
-    
+
     // helper methods
     void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
     std::vector<const char*> getRequiredExtensions();
@@ -88,5 +95,7 @@ public:
         framebufferResized = resized;
     }
 };
+
+} // namespace GSRender
 
 #endif // VULKAN_MANAGER_H

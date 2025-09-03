@@ -1,8 +1,10 @@
 #include "VulkanManager.h"
+#include "MemoryBlock.h"
 #include "SwapChainDetails.h"
 #include "utils/VkUtils.h"
 #include "QueueFamily.h"
 #include "Vertex.h"
+#include "MemoryAllocator.h"
 
 #include <iostream>
 #include <set>
@@ -24,6 +26,8 @@ const bool enableValidationLayers = false;
 const bool enableValidationLayers = true;
 #endif
 
+using namespace GSRender;
+
 VulkanManager::VulkanManager(GLFWwindow* window) : window(window) {
     std::cout << "Initializing Vulkan renderer..." << std::endl;
 
@@ -36,6 +40,10 @@ VulkanManager::VulkanManager(GLFWwindow* window) : window(window) {
     createSurface();
     pickPhysicalDevice();
     createLogicalDevice();
+    
+    // 初始化内存分配器
+    memoryAllocator = std::make_unique<MemoryAllocator>(physicalDevice, device);
+    
     createSwapChain();
     createImageViews();
     createRenderPass();
@@ -55,8 +63,8 @@ VulkanManager::~VulkanManager() {
 
     cleanupSwapChain();
 
-    vkDestroyBuffer(device, vertexBuffer, nullptr);
-    vkFreeMemory(device, vertexBufferMemory, nullptr);
+    // 使用内存分配器来释放内存和Buffer
+    memoryAllocator->freeBuffer(std::move(vertexBuffer));
 
     vkDestroyPipeline(device, graphicsPipeline, nullptr);
     vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
@@ -67,6 +75,9 @@ VulkanManager::~VulkanManager() {
     }
 
     vkDestroySwapchainKHR(device, swapChain, nullptr);
+
+    // 清理内存分配器
+    memoryAllocator.reset();
 
     vkDestroyDevice(device, nullptr);
 
@@ -623,7 +634,7 @@ void VulkanManager::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t 
 
     vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
 
-    VkBuffer vertexBuffers[] = {vertexBuffer};
+    VkBuffer vertexBuffers[] = {vertexBuffer->getVkBuffer()};
     VkDeviceSize offsets[] = {0};
     vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
 
@@ -749,47 +760,23 @@ void VulkanManager::recreateSwapChain() {
 
 void VulkanManager::createVertexBuffer() {
     VkDeviceSize bufferSize = sizeof(vertices[0]) * vertices.size();
-    VkBuffer stagingBuffer;
-    VkDeviceMemory stagingBufferMemory;
-    createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
+    std::unique_ptr<GSRender::Buffer> stagingBuffer = memoryAllocator->createBufferWithMemory(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+    const GSRender::Memory* stagingBufferMemory = stagingBuffer->getBindMemory();
 
     void* data;
-    vkMapMemory(device, stagingBufferMemory, 0, bufferSize, 0, &data);
+    VkResult mapResult = vkMapMemory(device, stagingBufferMemory->getDeviceMemory(), stagingBufferMemory->getOffset(), bufferSize, 0, &data);
+    if (mapResult != VK_SUCCESS) {
+        throw std::runtime_error("Failed to map staging buffer memory!");
+    }
+
     memcpy(data, vertices.data(), (size_t) bufferSize);
-    vkUnmapMemory(device, stagingBufferMemory);
+    vkUnmapMemory(device, stagingBufferMemory->getDeviceMemory());
 
-    createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, vertexBuffer, vertexBufferMemory);
+    vertexBuffer = memoryAllocator->createBufferWithMemory(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+    copyBuffer(stagingBuffer->getVkBuffer(), vertexBuffer->getVkBuffer(), bufferSize);
 
-    copyBuffer(stagingBuffer, vertexBuffer, bufferSize);
-
-    vkDestroyBuffer(device, stagingBuffer, nullptr);
-    vkFreeMemory(device, stagingBufferMemory, nullptr);
-}
-
-void VulkanManager::createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory) {
-    VkBufferCreateInfo bufferInfo{};
-    bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-    bufferInfo.size = size;
-    bufferInfo.usage = usage;
-    bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-
-    if (vkCreateBuffer(device, &bufferInfo, nullptr, &buffer) != VK_SUCCESS) {
-        throw std::runtime_error("failed to create buffer!");
-    }
-
-    VkMemoryRequirements memRequirements;
-    vkGetBufferMemoryRequirements(device, buffer, &memRequirements);
-
-    VkMemoryAllocateInfo allocInfo{};
-    allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-    allocInfo.allocationSize = memRequirements.size;
-    allocInfo.memoryTypeIndex = findMemoryType(physicalDevice, memRequirements.memoryTypeBits, properties);
-
-    if (vkAllocateMemory(device, &allocInfo, nullptr, &bufferMemory) != VK_SUCCESS) {
-        throw std::runtime_error("failed to allocate buffer memory!");
-    }
-
-    vkBindBufferMemory(device, buffer, bufferMemory, 0);
+    // 使用内存分配器来释放内存和Buffer
+    memoryAllocator->freeBuffer(std::move(stagingBuffer));
 }
 
 /// ======================= Helper Methods ======================= ///
