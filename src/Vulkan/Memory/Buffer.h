@@ -4,8 +4,15 @@
 #include "MemoryBlock.h"
 
 #include <vulkan/vulkan.h>
+#include <glm/glm.hpp>
 
 namespace GSRender {
+
+struct UniformBufferObject {
+    glm::mat4 model;
+    glm::mat4 view;
+    glm::mat4 proj;
+};
 
 class Buffer {
 public:

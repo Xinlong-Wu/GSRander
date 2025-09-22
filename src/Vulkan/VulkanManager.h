@@ -32,6 +32,7 @@ private:
     VkExtent2D swapChainExtent;
     std::vector<VkImageView> swapChainImageViews;
     VkRenderPass renderPass;
+    VkDescriptorSetLayout descriptorSetLayout;
     VkPipelineLayout pipelineLayout;
     VkPipeline graphicsPipeline;
     std::vector<VkFramebuffer> swapChainFramebuffers;
@@ -49,6 +50,9 @@ private:
 
     std::unique_ptr<GSRender::Buffer> vertexBuffer;
     std::unique_ptr<GSRender::Buffer> indexBuffer;
+
+    std::vector<std::unique_ptr<GSRender::Buffer>> uniformBuffers;
+    std::vector<void*> uniformBuffersMapped;
     
     // 内存分配器
     std::unique_ptr<GSRender::MemoryAllocator> memoryAllocator;
@@ -65,6 +69,7 @@ private:
     VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
     void createSwapChain();
     void createImageViews();
+    void createDescriptorSetLayout();
     void createGraphicsPipeline();
     void createRenderPass();
 
@@ -80,6 +85,8 @@ private:
 
     void createVertexBuffer();
     void createIndexBuffer();
+    void createUniformBuffers();
+    void updateUniformBuffer(uint32_t currentImage);
 
     // helper methods
     void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
