@@ -3,7 +3,17 @@
 find_package(Vulkan REQUIRED)
 
 # Find glfw3
-find_library_with_env_fallback(glfw3 FALSE)
+find_package(glfw3 QUIET)
+if (NOT glfw3_FOUND)
+    message(STATUS "glfw3 not found via find_package, trying environment variable...")
+    find_library_with_env(glfw3 FALSE)
+endif()
+
+find_package(glm QUIET)
+if (NOT glm_FOUND)
+    message(STATUS "glm not found via find_package, trying environment variable...")
+    find_library_with_env(glm TRUE)
+endif()
 
 add_subdirectory(Memory)
 set(VULKAN_DRIVER_SRC_LIST
@@ -17,7 +27,7 @@ add_library(render STATIC ${VULKAN_DRIVER_SRC_LIST})
 # Link glfw3 library (either from find_package or from environment variable)
 if(glfw3_FOUND)
     # If found through find_package, use the imported target
-    target_link_libraries(render PUBLIC GLFW::GLFW)
+    target_link_libraries(render PUBLIC glfw)
 else()
     # If found through environment variable, use the library directly
     target_link_libraries(render PUBLIC ${glfw3_LIBRARY})

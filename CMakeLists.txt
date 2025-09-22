@@ -5,9 +5,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Function to find library with environment variable fallback
-function(find_library_with_env_fallback PACKAGE_NAME HEADER_ONLY)
-    # Try to find package with find_package first
-    find_package(${PACKAGE_NAME} QUIET)
+function(find_library_with_env PACKAGE_NAME HEADER_ONLY)
 
     # If find_package failed, try to use ${PACKAGE_NAME}_DIR environment variable
     if(NOT ${PACKAGE_NAME}_FOUND)
@@ -59,10 +57,19 @@ endfunction()
 find_package(PCL REQUIRED)
 
 # Find glm (header-only library)
-find_library_with_env_fallback(glm TRUE)
+find_package(glm QUIET)
+if (NOT glm_FOUND)
+    message(STATUS "glm not found via find_package, trying environment variable...")
+    find_library_with_env(glm TRUE)
+endif()
 
 # Find glfw3
-find_library_with_env_fallback(glfw3 FALSE)
+find_package(glfw3 QUIET)
+if (NOT glfw3_FOUND)
+    message(STATUS "glfw3 not found via find_package, trying environment variable...")
+    find_library_with_env(glfw3 FALSE)
+endif()
+
 
 # Find Eigen3
 # find_package(Eigen3 3.3 REQUIRED)
@@ -127,7 +134,7 @@ target_link_libraries(gsrander PRIVATE
 # Link glfw3 library (either from find_package or from environment variable)
 if(glfw3_FOUND)
     # If found through find_package, use the imported target
-    target_link_libraries(gsrander PRIVATE GLFW::GLFW)
+    target_link_libraries(gsrander PRIVATE glfw)
 else()
     # If found through environment variable, use the library directly
     target_link_libraries(gsrander PRIVATE ${glfw3_LIBRARY})
